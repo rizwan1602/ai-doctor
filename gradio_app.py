@@ -49,4 +49,4 @@ iface = gr.Interface(
 
 port = int(os.environ.get("PORT", 7860))  # Use 7860 for local testing
 print(port)
-iface.launch(server_name="0.0.0.0", server_port=PORT)
+iface.launch(server_name="0.0.0.0", server_port=port)
