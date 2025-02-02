@@ -2,83 +2,51 @@ import os
 import gradio as gr
 
 from brain_of_the_doctor import encode_image, analyze_image_with_query
-from voice_of_the_patient import transcribe_with_groq
-from voice_of_the_doctor import text_to_speech_with_elevenlabs
+from voice_of_the_patient import record_audio, transcribe_with_groq
+from voice_of_the_doctor import text_to_speech_with_gtts, text_to_speech_with_elevenlabs
 
-# ✅ Developer Name
-developer_name = "Developed by: Syed Rizwan"
+#load_dotenv()
 
-# ✅ Ensure Railway assigns the correct port
-
-# ✅ AI Doctor System Prompt
-system_prompt = """You have to act as a professional doctor, i know you are not but this is for learning purposes. 
-            What's in this image? Do you find anything wrong with it medically? 
+system_prompt="""You have to act as a professional doctor, i know you are not but this is for learning purpose. 
+            What's in this image?. Do you find anything wrong with it medically? 
             If you make a differential, suggest some remedies for them. Donot add any numbers or special characters in 
             your response. Your response should be in one long paragraph. Also always answer as if you are answering to a real person.
             Donot say 'In the image I see' but say 'With what I see, I think you have ....'
             Dont respond as an AI model in markdown, your answer should mimic that of an actual doctor not an AI bot, 
-            Keep your answer concise (max 2 sentences). No preamble, start your answer right away please."""
+            Keep your answer concise (max 2 sentences). No preamble, start your answer right away please"""
 
-# ✅ Function to Process Inputs
+
 def process_inputs(audio_filepath, image_filepath):
-    speech_to_text_output = transcribe_with_groq(
-        GROQ_API_KEY=os.environ.get("GROQ_API_KEY"), 
-        audio_filepath=audio_filepath,
-        stt_model="whisper-large-v3"
-    )
+    speech_to_text_output = transcribe_with_groq(GROQ_API_KEY=os.environ.get("GROQ_API_KEY"), 
+                                                 audio_filepath=audio_filepath,
+                                                 stt_model="whisper-large-v3")
 
-    # ✅ Analyze Image if Provided
+    # Handle the image input
     if image_filepath:
-        doctor_response = analyze_image_with_query(
-            query=system_prompt + speech_to_text_output, 
-            encoded_image=encode_image(image_filepath), 
-            model="llama-3.2-11b-vision-preview"
-        )
+        doctor_response = analyze_image_with_query(query=system_prompt+speech_to_text_output, encoded_image=encode_image(image_filepath), model="llama-3.2-11b-vision-preview")
     else:
-        doctor_response = "No image provided for me to analyze."
+        doctor_response = "No image provided for me to analyze"
 
-    # ✅ Convert Text to Speech
-    output_audio_path = "final.mp3"
-    text_to_speech_with_elevenlabs(input_text=doctor_response, output_filepath=output_audio_path)
+    voice_of_doctor = text_to_speech_with_elevenlabs(input_text=doctor_response, output_filepath="final.mp3") 
 
-    # ✅ Ensure the audio file exists
-    if not os.path.exists(output_audio_path):
-        output_audio_path = None  # Return None if file creation failed
+    return speech_to_text_output, doctor_response, voice_of_doctor
 
-    return speech_to_text_output, doctor_response, output_audio_path
 
-# ✅ JavaScript Code for Forced Autoplay
-autoplay_js = """
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    setTimeout(() => {
-        var audioElements = document.querySelectorAll("audio");
-        audioElements.forEach(audio => {
-            audio.play().catch(error => console.log("Autoplay blocked:", error));
-        });
-    }, 1000);  // Small delay ensures the element is available
-});
-</script>
-"""
+# Create the interface
+iface = gr.Interface(
+    fn=process_inputs,
+    inputs=[
+        gr.Audio(sources=["microphone"], type="filepath"),
+        gr.Image(type="filepath")
+    ],
+    outputs=[
+        gr.Textbox(label="Speech to Text"),
+        gr.Textbox(label="Doctor's Response"),
+        gr.Audio("Temp.mp3")
+    ],
+    title="AI Doctor with Vision and Voice"
+)
 
-# ✅ Correct Gradio Interface with Developer Name Inside Blocks
-with gr.Blocks() as iface:
-    gr.Markdown(autoplay_js)  # ✅ Inject JavaScript for autoplay
-    gr.Markdown(f"### 👨‍💻 {developer_name}")  # ✅ Developer credit at the bottom
+iface.launch(debug=True)
 
-    iface = gr.Interface(
-        fn=process_inputs,
-        inputs=[
-            gr.Audio(sources=["microphone"], type="filepath"),
-            gr.Image(type="filepath")
-        ],
-        outputs=[
-            gr.Textbox(label="Speech to Text"),
-            gr.Textbox(label="Doctor's Response"),
-            gr.Audio(label="Generated Voice Response", autoplay=True)
-        ],
-        title="AI Doctor with Vision and Voice"
-    )
-
-# ✅ Launch the Gradio App
-iface.launch(server_name="0.0.0.0", debug=True)
+#http://127.0.0.1:7860
