@@ -9,8 +9,11 @@ from voice_of_the_doctor import text_to_speech_with_elevenlabs
 PORT = int(os.environ.get("PORT", 7860))  # Default to 7860 for local testing
 print(f"🚀 Gradio app running on port: {PORT}")  # Debugging info
 
+# ✅ Developer Name
+developer_name = "Developed by: [Your Name]"
+
 # ✅ AI Doctor System Prompt
-system_prompt = """You have to act as a professional doctor, i know you are not but this is for learning purposes. 
+system_prompt = """You have to act as a professional doctor, I know you are not but this is for learning purposes. 
             What's in this image? Do you find anything wrong with it medically? 
             If you make a differential, suggest some remedies for them. Do not add any numbers or special characters in 
             your response. Your response should be in one long paragraph. Also always answer as if you are answering to a real person.
@@ -66,19 +69,41 @@ document.addEventListener("DOMContentLoaded", function() {
 </script>
 """
 
-# ✅ Gradio Interface
-with gr.Blocks() as demo:
-    gr.Markdown(autoplay_js)  # ✅ Inject JavaScript for autoplay
+# ✅ Gradio Interface (Same Structure as Original)
+iface = gr.Interface(
+    fn=process_inputs,
+    inputs=[
+        gr.Audio(sources=["microphone"], type="filepath"),
+        gr.Image(type="filepath")
+    ],
+    outputs=[
+        gr.Textbox(label="Speech to Text"),
+        gr.Textbox(label="Doctor's Response"),
+        gr.Audio(label="Generated Voice Response", autoplay=True)  # ✅ Will autoplay
+    ],
+    title="AI Doctor with Vision and Voice",
+    description="This AI-powered doctor can analyze images and voice inputs to generate medical insights."
+)
 
-    with gr.Row():
-        audio_input = gr.Audio(sources=["microphone"], type="filepath")
-        image_input = gr.Image(type="filepath")
+# ✅ Inject JavaScript for autoplay **without changing layout**
+iface = gr.Blocks()  # Keeps everything in original position
+with iface:
+    gr.Markdown(autoplay_js)  # ✅ JavaScript is injected for forced autoplay
+    iface = gr.Interface(
+        fn=process_inputs,
+        inputs=[
+            gr.Audio(sources=["microphone"], type="filepath"),
+            gr.Image(type="filepath")
+        ],
+        outputs=[
+            gr.Textbox(label="Speech to Text"),
+            gr.Textbox(label="Doctor's Response"),
+            gr.Audio(label="Generated Voice Response", autoplay=True)
+        ],
+        title="AI Doctor with Vision and Voice",
+    )
+    # ✅ Developer Credit at the Bottom (Without Changing Button Position)
+    gr.Markdown(f"### 👨‍💻 {developer_name}")
 
-    speech_to_text = gr.Textbox(label="Speech to Text")
-    doctor_response = gr.Textbox(label="Doctor's Response")
-    generated_audio = gr.Audio(label="Generated Voice Response", autoplay=True)  # ✅ Will autoplay
-
-    btn = gr.Button("Process")
-    btn.click(process_inputs, inputs=[audio_input, image_input], outputs=[speech_to_text, doctor_response, generated_audio])
-
-demo.launch(server_name="0.0.0.0", server_port=PORT)
+# ✅ Launch the Gradio App
+iface.launch(server_name="0.0.0.0", server_port=PORT)
