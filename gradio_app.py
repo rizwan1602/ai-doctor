@@ -9,8 +9,6 @@ from voice_of_the_doctor import text_to_speech_with_elevenlabs
 developer_name = "Developed by: Syed Rizwan"
 
 # ✅ Ensure Railway assigns the correct port
-PORT = int(os.environ.get("PORT", 7860))  # Default to 7860 for local testing
-print(f"🚀 Gradio app running on port: {PORT}")  # Debugging info
 
 # ✅ AI Doctor System Prompt
 system_prompt = """You have to act as a professional doctor, i know you are not but this is for learning purposes. 
@@ -83,4 +81,4 @@ with gr.Blocks() as iface:
     )
 
 # ✅ Launch the Gradio App
-iface.launch(server_name="0.0.0.0", server_port=PORT)
+iface.launch(server_name="0.0.0.0", debug=True)
