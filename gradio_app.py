@@ -48,6 +48,5 @@ iface = gr.Interface(
 )
 
 port = int(os.environ.get("PORT", 7860))  # Use 7860 for local testing
-
-# Start Gradio with correct binding and sharing enabled
-iface.launch(server_name="0.0.0.0", server_port=port, share=True)
+print(port)
+iface.launch(server_name="0.0.0.0", server_port=PORT)
